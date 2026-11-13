@@ -1,0 +1,801 @@
+<div class="hwr_settings">
+    <div class="inline-drawer">
+        <div class="inline-drawer-toggle inline-drawer-header">
+            <b>P1G搜（颜料搜）· GPT → Gemini 考据版</b>
+            <div class="inline-drawer-icon fa-solid fa-circle-chevron-down down"></div>
+        </div>
+        <div class="inline-drawer-content">
+            <div class="hwr_intro hwr_intro_compact">
+                GPT 联网查原作，自动把资料交给当前主模型继续 RP。首次使用请先设置 GPT 资料员连接配置。
+            </div>
+
+            <label class="checkbox_label" for="hwr_enabled">
+                <input type="checkbox" id="hwr_enabled">
+                <span>启用插件</span>
+            </label>
+
+            <div class="hwr_status_row">
+                <div id="hwr_status" data-state="idle">已关闭</div>
+            </div>
+
+            <details id="hwr_details_section" class="hwr_section hwr_master_details">
+                <summary>
+                    <span class="hwr_summary_title">&#35814;&#32454;&#35774;&#32622;</span>
+                    <span id="hwr_details_summary" class="hwr_summary_meta" aria-live="polite"></span>
+                </summary>
+                <div class="hwr_section_body hwr_master_details_body">
+
+            <label for="hwr_research_backend">搜索来源</label>
+            <select id="hwr_research_backend" class="text_pole">
+                <option value="openai_native">GPT 原生联网（安卓 TT，无需 SearXNG）</option>
+                <option value="searxng">本机 SearXNG（适用于所有模型，推荐）</option>
+                <option value="serpapi">SerpAPI Google（适用于所有模型）</option>
+                <option value="tavily">Tavily AI Search（共享 Key）</option>
+                <option value="serper">Serper Google Search（共享 Key）</option>
+                <option value="deepseek">DeepSeek Search（浏览器直连，中文内容强）</option>
+                <option value="koboldcpp">KoboldCpp WebSearch（继承当前连接 URL）</option>
+                <option value="extras">Extras API（已废弃，仅聚合结果）</option>
+                <option value="selenium">Selenium Plugin（需 server plugin，仅聚合结果）</option>
+                <!-- Paused: these modes require non-stock server routes or response passthrough.
+                <option value="anysearch">AnySearch（anysearch.com，适用于所有模型）</option>
+                <option value="claude_profile">Claude 原生搜索桥接（Profile 或 URL + Key）</option>
+                <option value="gemini_profile">Gemini 原生搜索直答（Profile 或 URL + Key）</option>
+                -->
+            </select>
+            <div class="hwr_hint">
+                考据版推荐 GPT 原生联网；选择来源后在“当前来源配置”中设置。联网研究会使用你的 API 额度。
+            </div>
+
+            <div id="hwr_openai_native_settings" class="hwr_backend_box">
+                <h4>GPT 查资料 → Gemini 继续 RP</h4>
+                <div class="hwr_notice">
+                    先到 TT 的 API 连接页选择 <b>Custom（OpenAI Responses）</b>，地址填 <code>https://api.openai.com/v1</code>，
+                    填入你的 API Key，选择支持联网的 GPT 模型，保存为一个连接配置，例如“GPT 资料员”。然后切回你的 Gemini 连接，在这里选择刚保存的配置。
+                </div>
+                <label for="hwr_openai_native_profile">GPT 资料员连接配置</label>
+                <div class="hwr_inline">
+                    <select id="hwr_openai_native_profile" class="text_pole"></select>
+                    <button id="hwr_refresh_openai_native_profiles" class="menu_button" type="button">刷新</button>
+                </div>
+                <div id="hwr_openai_native_profile_hint" class="hwr_hint"></div>
+                <label for="hwr_openai_work_title">作品名（换作品时请修改）</label>
+                <input id="hwr_openai_work_title" class="text_pole" type="text" maxlength="300" placeholder="例如：无职转生／葬送的芙莉莲">
+                <label for="hwr_openai_spoiler_boundary">原作版本和剧透范围（选填）</label>
+                <input id="hwr_openai_spoiler_boundary" class="text_pole" type="text" maxlength="1000" placeholder="例如：只按动画第一季，不引用后续小说的事件">
+                <label for="hwr_openai_research_instruction">你对资料员的要求（选填）</label>
+                <textarea id="hwr_openai_research_instruction" class="text_pole" rows="4" maxlength="4000" placeholder="例如：优先官方原作和日文资料；重点核实角色说话习惯、人物关系和时间线；别把同人当原作。"></textarea>
+                <div class="hwr_grid">
+                    <div>
+                        <label for="hwr_openai_research_rounds">最多研究轮数</label>
+                        <input id="hwr_openai_research_rounds" class="text_pole" type="number" min="1" max="3" step="1">
+                    </div>
+                    <div>
+                        <label for="hwr_openai_research_tokens">每轮输出 Token 上限</label>
+                        <input id="hwr_openai_research_tokens" class="text_pole" type="number" min="1500" max="12000" step="500">
+                    </div>
+                    <div>
+                        <label for="hwr_openai_research_timeout">整次研究等待上限（毫秒）</label>
+                        <input id="hwr_openai_research_timeout" class="text_pole" type="number" min="60000" max="300000" step="30000">
+                    </div>
+                </div>
+                <div class="hwr_hint">
+                    一轮内 GPT 可以执行多次搜索；有实质缺口才进行下一轮。轮数是上限，不保证“资料绝对齐全”。默认每次回复前查资料；重新生成可复用当前聊天的短期缓存。
+                </div>
+                <label class="checkbox_label" for="hwr_openai_require_research">
+                    <input id="hwr_openai_require_research" type="checkbox">
+                    <span>查资料失败就暂停本轮，让我先检查原因</span>
+                </label>
+                <button id="hwr_test_openai_native" class="menu_button hwr_button" type="button">测试 GPT 联网（会消耗 API 及搜索额度）</button>
+                <details>
+                    <summary>查看最近一次交给主模型的资料</summary>
+                    <textarea id="hwr_openai_native_preview" class="text_pole" rows="10" readonly placeholder="测试或完成一次研究后，资料会出现在这里。它只在当前页面保留。"></textarea>
+                </details>
+                <div class="hwr_hint">
+                    GPT 会收到当前角色卡的简要信息、最近聊天以及你的检索要求，以便查对角色；Key 由 TT 的连接配置管理，扩展不另存明文 Key。资料只用于本轮上下文，不会新增聊天楼层或自动改世界书。测试结果不会自动发送给 Gemini。
+                </div>
+            </div>
+
+            <div id="hwr_adapter_block">
+                <label for="hwr_adapter">当前回答模型的查询规划与最终回答策略</label>
+                <div class="hwr_inline">
+                    <select id="hwr_adapter" class="text_pole">
+                        <option value="auto">自动识别</option>
+                        <option value="claude">Claude 启发：必要性门控 / 顺序查证</option>
+                        <option value="gemini">Gemini 启发：搜索增益 / 查询提炼</option>
+                        <option value="deepseek-v4-pro">DeepSeek V4 Pro：分面合并</option>
+                        <option value="glm-5.2">GLM 5.2：层级核验</option>
+                        <option value="kimi-k3">Kimi K3：研究收敛</option>
+                        <option value="other">其他 / 通用</option>
+                    </select>
+                    <button id="hwr_refresh_model" class="menu_button" type="button" title="刷新当前模型识别">
+                        <i class="fa-solid fa-rotate"></i>
+                    </button>
+                </div>
+                <div id="hwr_resolved_adapter" class="hwr_hint"></div>
+                <div class="hwr_hint">
+                    只改变如何判断、规划查询和使用证据，不会切换当前回答模型或调用厂商官方搜索。
+                </div>
+                <details class="hwr_prompt_editor">
+                    <summary>自定义查询规划与最终回答策略</summary>
+                    <div class="hwr_prompt_editor_body">
+                        <div class="hwr_hint">
+                            这是所选内置策略之上的补充层，同时影响隐藏规划器怎样组织查询，以及搜后主模型怎样使用证据回答；策略名称本身不会切换任何模型。
+                            例如主模型是 DeepSeek 而手选 Claude，只表示采用 Claude 启发规则；规划由下方选择的规划 API 执行，最终正文仍由 DeepSeek 执行。
+                            补充提示词属于模型软指令，不能保证规划器每次遵守；插件仍会在真正发送前硬性拦截包装后的用户输入、长叙事和超过 120 字符的查询。
+                        </div>
+                        <label class="checkbox_label" for="hwr_strategy_custom_enabled">
+                            <input type="checkbox" id="hwr_strategy_custom_enabled">
+                            <span>启用自定义策略补充提示词</span>
+                        </label>
+                        <textarea id="hwr_strategy_custom_prompt" class="text_pole hwr_prompt_textarea" rows="7" maxlength="4000" spellcheck="false" placeholder="例如：查询时优先官方设定集与作品官网；最终回答把考据自然融入角色言行，不单列资料摘要。"></textarea>
+                        <div class="hwr_prompt_status_row">
+                            <div id="hwr_strategy_custom_status" class="hwr_prompt_status" data-state="default" role="status" aria-live="polite"></div>
+                            <div id="hwr_strategy_custom_count" class="hwr_prompt_count">0 / 4000</div>
+                        </div>
+                        <div class="hwr_button_row">
+                            <button id="hwr_save_strategy_custom_prompt" class="menu_button" type="button">
+                                <i class="fa-solid fa-floppy-disk"></i>
+                                <span>保存自定义策略</span>
+                            </button>
+                            <button id="hwr_restore_strategy_custom_prompt" class="menu_button" type="button">
+                                <i class="fa-solid fa-rotate-left"></i>
+                                <span>恢复内置默认</span>
+                            </button>
+                        </div>
+                        <div class="hwr_hint">
+                            自定义内容会随相关请求发送给所选隐藏规划模型，并在有搜索结果时进入主模型的本轮最终回答上下文；请勿填写 Key、Token、密码或私人信息。固定的证据安全、引用真实性、禁止伪装厂商原生搜索以及高级查询上限仍优先。恢复默认只清除这份补充词，不会更改上面的模型策略下拉框。
+                        </div>
+                    </div>
+                </details>
+            </div>
+
+            <div id="hwr_planner_connection_settings" class="hwr_backend_box">
+                <h4>隐藏搜索规划 API</h4>
+                <label for="hwr_planner_connection_mode">规划器来源</label>
+                <select id="hwr_planner_connection_mode" class="text_pole">
+                    <option value="current">当前回答模型（原有方式）</option>
+                    <option value="profile">指定 Connection Manager Profile（副 API）</option>
+                    <option value="direct">自行保存 OpenAI 兼容 URL + Key（副 API）</option>
+                </select>
+                <div id="hwr_planner_profile_panel" class="hwr_connection_panel">
+                    <label for="hwr_planner_profile">副 API Profile（仅列出 Chat Completion）</label>
+                    <div class="hwr_inline">
+                        <select id="hwr_planner_profile" class="text_pole"></select>
+                        <button id="hwr_refresh_planner_profiles" class="menu_button" type="button" title="刷新 Connection Profile">
+                            <i class="fa-solid fa-rotate"></i>
+                        </button>
+                    </div>
+                    <div id="hwr_planner_profile_hint" class="hwr_hint"></div>
+                    <button id="hwr_test_planner_profile" class="menu_button hwr_button" type="button">
+                        <i class="fa-solid fa-flask"></i>
+                        <span>测试副规划器（会调用一次 API）</span>
+                    </button>
+                </div>
+                <div id="hwr_planner_direct_panel" class="hwr_connection_panel hwr_direct_panel">
+                    <label for="hwr_planner_direct_connection">已保存的副 API 配置</label>
+                    <div class="hwr_inline">
+                        <select id="hwr_planner_direct_connection" class="text_pole"></select>
+                        <button id="hwr_new_planner_direct" class="menu_button" type="button" title="新建副 API 配置">
+                            <i class="fa-solid fa-plus"></i>
+                            <span>新建</span>
+                        </button>
+                    </div>
+                    <label for="hwr_planner_direct_name">配置名称</label>
+                    <input id="hwr_planner_direct_name" class="text_pole" type="text" autocomplete="off" spellcheck="false" placeholder="例如：便宜规划器">
+                    <label for="hwr_planner_direct_url">OpenAI 兼容 Base URL</label>
+                    <input id="hwr_planner_direct_url" class="text_pole" type="url" autocomplete="off" spellcheck="false" placeholder="https://example.com/v1">
+                    <div class="hwr_hint">
+                        只支持 OpenAI-compatible Chat Completions。填写 API 根路径；若粘贴了末尾 <code>/chat/completions</code>，保存时会自动去除。
+                    </div>
+                    <label for="hwr_planner_direct_model">精确模型 ID</label>
+                    <div class="hwr_model_row">
+                        <input id="hwr_planner_direct_model" class="text_pole" type="text" list="hwr_planner_direct_models" autocomplete="off" spellcheck="false" placeholder="例如 deepseek-chat">
+                        <button id="hwr_fetch_planner_direct_models" class="menu_button" type="button" aria-describedby="hwr_planner_direct_model_list_status" aria-busy="false">
+                            <i class="fa-solid fa-list"></i>
+                            <span>拉取模型列表</span>
+                        </button>
+                    </div>
+                    <datalist id="hwr_planner_direct_models"></datalist>
+                    <div id="hwr_planner_direct_model_list_status" class="hwr_model_list_status" data-state="idle" role="status" aria-live="polite">
+                        首次配置时模型 ID 可留空：点击后会先安全保存 URL/Key 凭据草稿再拉取；选择模型并保存配置后才启用。
+                    </div>
+                    <label for="hwr_planner_direct_key">API Key</label>
+                    <input id="hwr_planner_direct_key" class="text_pole" type="password" autocomplete="new-password" spellcheck="false" placeholder="输入后保存；已保存的 Key 不会回显">
+                    <div id="hwr_planner_direct_status" class="hwr_credential_status" role="status" aria-live="polite"></div>
+                    <div class="hwr_button_row">
+                        <button id="hwr_save_planner_direct" class="menu_button" type="button">
+                            <i class="fa-solid fa-floppy-disk"></i>
+                            <span>保存配置</span>
+                        </button>
+                        <button id="hwr_delete_planner_direct" class="menu_button" type="button">
+                            <i class="fa-solid fa-trash"></i>
+                            <span>删除配置</span>
+                        </button>
+                        <button id="hwr_test_planner_direct" class="menu_button" type="button">
+                            <i class="fa-solid fa-flask"></i>
+                            <span>测试副规划器（会调用一次 API）</span>
+                        </button>
+                    </div>
+                    <div class="hwr_hint">
+                        Key 只写入 SillyTavern 服务端 secrets，不写入扩展设置、聊天或浏览器存储。
+                    </div>
+                    <details class="hwr_subdetails">
+                        <summary>直连 Key 安全与版本说明</summary>
+                        <div class="hwr_notice hwr_warning">独立直连配置需要 SillyTavern 1.18.0+。保存时原版酒馆可能短暂切换活动 Custom Key；请勿跨标签页同时生成或轮换 Key，只安装可信扩展。需要完全避开共享密钥槽影响时请使用 Connection Profile。</div>
+                    </details>
+                </div>
+                <label class="checkbox_label" for="hwr_planner_fallback_current">
+                    <input type="checkbox" id="hwr_planner_fallback_current">
+                    <span>副 API 失败时，本轮后续规划回退当前回答模型（推荐）</span>
+                </label>
+                <div id="hwr_resolved_planner_connection" class="hwr_hint"></div>
+                <div class="hwr_hint">
+                    副 API 只负责判断和规划查询；网页搜索仍由所选来源执行，最终正文始终由当前回答模型生成。
+                </div>
+            </div>
+
+            <div id="hwr_result_behavior_block" class="hwr_compact_group">
+            <label for="hwr_result_transport">搜索结果注入方式</label>
+            <select id="hwr_result_transport" class="text_pole">
+                <option value="auto">自动：隐藏工具结果优先（推荐）</option>
+                <option value="prompt">固定使用隐藏研究包（最高兼容）</option>
+            </select>
+            <div id="hwr_resolved_transport" class="hwr_hint"></div>
+            <div class="hwr_hint">
+                自动模式优先使用隐藏工具历史，不兼容时回退隐藏研究包；使用 No Tools 的连接建议固定隐藏研究包。
+            </div>
+
+            <label for="hwr_result_injection_position">研究上下文插入位置</label>
+            <select id="hwr_result_injection_position" class="text_pole">
+                <option value="chat">聊天记录内（推荐，深度可调）</option>
+                <option value="before_prompt">主提示词开头（最不利于前缀缓存）</option>
+                <option value="after_prompt">主提示词末尾</option>
+                <option value="variable">指定酒馆变量槽（由预设决定精确位置）</option>
+            </select>
+            <div id="hwr_chat_injection_options" class="hwr_injection_options">
+                <label for="hwr_result_injection_role">临时消息角色</label>
+                <select id="hwr_result_injection_role" class="text_pole">
+                    <option value="user">User（推荐，避免 system 被提升到开头）</option>
+                    <option value="system">System（指令权重高，但常被提升到开头）</option>
+                    <option value="assistant">Assistant（高级，不推荐）</option>
+                </select>
+                <div id="hwr_injection_depth_options" class="hwr_nested_fields">
+                    <label for="hwr_result_injection_depth">聊天深度</label>
+                    <input id="hwr_result_injection_depth" class="text_pole" type="number" min="0" max="100" step="1">
+                    <div class="hwr_hint">
+                        深度 0 位于最新聊天之后，最利于保留前面的稳定缓存；数值越大越靠前。System 即使选择深度 0，也可能被 Claude/Gemini 等转换器提升到请求开头。
+                    </div>
+                </div>
+            </div>
+            <div id="hwr_variable_injection_options" class="hwr_injection_options">
+                <label for="hwr_result_variable_scope">变量范围</label>
+                <select id="hwr_result_variable_scope" class="text_pole">
+                    <option value="local">当前聊天局部变量（推荐）</option>
+                    <option value="global">酒馆全局变量（高级）</option>
+                </select>
+                <label for="hwr_result_variable_name">专用变量名</label>
+                <input id="hwr_result_variable_name" class="text_pole" type="text" maxlength="64" autocomplete="off" spellcheck="false" placeholder="p1g_search_result">
+                <div class="hwr_notice hwr_warning">
+                    在预设希望插入资料的位置放入 <code id="hwr_result_variable_macro_example">{{getvar::p1g_search_result}}</code>。请为本插件使用一个专用变量；若误放多次，只会保留最后一处。放在主提示词开头仍会破坏前缀缓存，建议放在靠近聊天历史末尾的位置。
+                </div>
+                <div class="hwr_hint">
+                    插件不会把搜索资料保存进酒馆变量：变量只短暂收到一个随机标记。完整研究包会先在请求内存中计入一次 token 预算，正式请求构造完成后再移动到变量槽并立即恢复旧值；若本轮找不到占位符，会留在聊天末尾安全回退。
+                </div>
+            </div>
+            <div id="hwr_resolved_injection" class="hwr_hint"></div>
+            <div class="hwr_hint">
+                自动工具通道的 assistant/tool 配对始终追加在本轮末尾，不能任意移动；这里控制的是工具政策、可信时间与研究包的位置。需要完全精确的位置时，请固定研究包或使用变量槽。
+            </div>
+
+            <label for="hwr_search_policy">触发策略</label>
+            <select id="hwr_search_policy" class="text_pole">
+                <option value="auto">模型自动判断（会调用隐藏规划器，推荐）</option>
+                <option value="always">每条消息都调用并至少搜索一次</option>
+                <option value="explicit">仅在用户明确要求联网时搜索（其他消息本地跳过）</option>
+            </select>
+            <div class="hwr_hint">
+                自动判断可能消耗一次规划 API；“仅明确要求联网”可在其他消息上零 token 跳过。明确“不联网”始终优先。
+            </div>
+            </div>
+            <details class="hwr_prompt_editor">
+                <summary>自定义触发判断提示词</summary>
+                <div class="hwr_prompt_editor_body">
+                    <div class="hwr_hint">
+                        只补充隐藏规划器对模糊场景的 SEARCH / DONE 判断，不会改写本地门控：明确“不联网”仍最高优先；“每条消息”和高置信动态场景的首次搜索不能被取消；“仅明确要求联网”未命中时根本不会调用规划器。
+                    </div>
+                    <label class="checkbox_label" for="hwr_trigger_custom_enabled">
+                        <input type="checkbox" id="hwr_trigger_custom_enabled">
+                        <span>启用自定义触发补充提示词</span>
+                    </label>
+                    <textarea id="hwr_trigger_custom_prompt" class="text_pole hwr_prompt_textarea" rows="7" maxlength="4000" spellcheck="false" placeholder="例如：涉及虚构作品的具体原作设定且内部置信度不足时倾向搜索；纯续写、改写或用户已给出设定时不搜索。"></textarea>
+                    <div class="hwr_prompt_status_row">
+                        <div id="hwr_trigger_custom_status" class="hwr_prompt_status" data-state="default" role="status" aria-live="polite"></div>
+                        <div id="hwr_trigger_custom_count" class="hwr_prompt_count">0 / 4000</div>
+                    </div>
+                    <div class="hwr_button_row">
+                        <button id="hwr_save_trigger_custom_prompt" class="menu_button" type="button">
+                            <i class="fa-solid fa-floppy-disk"></i>
+                            <span>保存自定义触发规则</span>
+                        </button>
+                        <button id="hwr_restore_trigger_custom_prompt" class="menu_button" type="button">
+                            <i class="fa-solid fa-rotate-left"></i>
+                            <span>恢复内置默认</span>
+                        </button>
+                    </div>
+                    <div class="hwr_hint">
+                        自定义内容会随被触发的隐藏规划请求发送给所选规划模型并增加少量输入 tokens；请勿填写 Key、Token、密码或私人信息。恢复默认只清除这份补充词，不会更改触发策略下拉框。
+                    </div>
+                </div>
+            </details>
+
+            <div id="hwr_searxng_settings" class="hwr_backend_box">
+                <h4>SearXNG</h4>
+                <div class="hwr_notice">
+                    当前 SearXNG 路径只使用搜索结果标题、URL、日期和摘要，不会像原生搜索工具那样继续读取完整网页；它属于摘要级研究。
+                </div>
+                <label for="hwr_searxng_url">Base URL</label>
+                <input id="hwr_searxng_url" class="text_pole" type="text" placeholder="空白时继承 WebSearch，最后回退 http://localhost:8888">
+                <div class="hwr_hint">本机可直接填写 <code>127.0.0.1:8080</code> 或 <code>localhost:8888</code>，插件会自动补全 <code>http://</code>；远程地址必须明确填写 <code>http://</code> 或 <code>https://</code>。</div>
+                <label for="hwr_searxng_preferences">Preferences string（可选）</label>
+                <input id="hwr_searxng_preferences" class="text_pole" type="text" placeholder="空白时继承 WebSearch">
+                <button id="hwr_test_searxng" class="menu_button hwr_button" type="button">
+                    <i class="fa-solid fa-magnifying-glass"></i>
+                    <span>测试 SearXNG（不调用模型）</span>
+                </button>
+            </div>
+
+            <!-- Paused server-dependent UI: AnySearch needs a dedicated server proxy.
+            <div id="hwr_anysearch_settings" class="hwr_backend_box">
+                <h4>AnySearch（anysearch.com）</h4>
+                <div class="hwr_notice">
+                    使用 AnySearch 官方统一搜索 REST API。Key 可选；不保存 Key 时使用匿名额度。返回的正文或摘要会受本扩展的证据字符预算约束，不会原样写入聊天记录。
+                </div>
+                <label for="hwr_anysearch_zone">检索区域（可选）</label>
+                <select id="hwr_anysearch_zone" class="text_pole">
+                    <option value="">自动路由</option>
+                    <option value="intl">国际（intl）</option>
+                    <option value="cn">中国（cn）</option>
+                </select>
+                <label for="hwr_anysearch_language">首选语言（可选）</label>
+                <input id="hwr_anysearch_language" class="text_pole" type="text" autocomplete="off" spellcheck="false" placeholder="例如 zh-CN 或 en">
+                <label for="hwr_anysearch_key">API Key（可选）</label>
+                <input id="hwr_anysearch_key" class="text_pole" type="password" autocomplete="new-password" spellcheck="false">
+                <div id="hwr_anysearch_status" class="hwr_credential_status" role="status" aria-live="polite"></div>
+                <div class="hwr_button_row">
+                    <button id="hwr_save_anysearch_key" class="menu_button" type="button">
+                        <i class="fa-solid fa-floppy-disk"></i>
+                        <span>保存 AnySearch Key</span>
+                    </button>
+                    <button id="hwr_clear_anysearch_key" class="menu_button" type="button">
+                        <i class="fa-solid fa-key"></i>
+                        <span>删除 Key 并切回匿名</span>
+                    </button>
+                    <button id="hwr_test_anysearch" class="menu_button" type="button">
+                        <i class="fa-solid fa-magnifying-glass"></i>
+                        <span>测试 AnySearch（不调用模型）</span>
+                    </button>
+                </div>
+            </div>
+            -->
+
+            <div id="hwr_serpapi_settings" class="hwr_backend_box">
+                <h4>SerpAPI Google Search</h4>
+                <div class="hwr_notice">
+                    复用原版 SillyTavern 内置的 SerpAPI 密钥槽与基础搜索路由。这里保存的新 Key 也会成为酒馆 WebSearch 等功能使用的当前共享 Key；每次只请求一页。
+                </div>
+                <!-- Paused with the enhanced server adapter: stock SerpAPI ignores hl/gl.
+                <label for="hwr_serpapi_language">Google 语言 hl（可选）</label>
+                <input id="hwr_serpapi_language" class="text_pole" type="text" autocomplete="off" spellcheck="false" placeholder="例如 zh-cn、en 或 ja">
+                <label for="hwr_serpapi_country">Google 国家 gl（可选）</label>
+                <input id="hwr_serpapi_country" class="text_pole" type="text" autocomplete="off" spellcheck="false" maxlength="2" placeholder="例如 cn、us 或 jp">
+                -->
+                <label for="hwr_serpapi_key">SerpAPI Key</label>
+                <input id="hwr_serpapi_key" class="text_pole" type="password" autocomplete="new-password" spellcheck="false">
+                <div id="hwr_serpapi_status" class="hwr_credential_status" role="status" aria-live="polite"></div>
+                <div class="hwr_button_row">
+                    <button id="hwr_save_serpapi_key" class="menu_button" type="button">
+                        <i class="fa-solid fa-floppy-disk"></i>
+                        <span>保存共享 SerpAPI Key</span>
+                    </button>
+                    <button id="hwr_clear_serpapi_key" class="menu_button" type="button">
+                        <i class="fa-solid fa-key"></i>
+                        <span>删除当前共享 Key</span>
+                    </button>
+                    <button id="hwr_test_serpapi" class="menu_button" type="button">
+                        <i class="fa-solid fa-magnifying-glass"></i>
+                        <span>测试 SerpAPI（会消耗一次搜索）</span>
+                    </button>
+                </div>
+            </div>
+
+            <div id="hwr_tavily_settings" class="hwr_backend_box">
+                <h4>Tavily AI Search</h4>
+                <div class="hwr_notice">
+                    复用原版 SillyTavern 的 Tavily 搜索路由与当前用户的共享密钥槽。这里保存或删除 Key 也会影响酒馆 WebSearch 等其他使用者。P1G搜只采用带有效 HTTP(S) URL 的搜索结果，不请求图片，也不会把 Tavily 顶层 answer 当成可独立引用的证据。
+                </div>
+                <label for="hwr_tavily_key">Tavily Key</label>
+                <input id="hwr_tavily_key" class="text_pole" type="password" autocomplete="new-password" spellcheck="false">
+                <div id="hwr_tavily_status" class="hwr_credential_status" role="status" aria-live="polite"></div>
+                <div class="hwr_button_row">
+                    <button id="hwr_save_tavily_key" class="menu_button" type="button">
+                        <i class="fa-solid fa-floppy-disk"></i>
+                        <span>保存共享 Tavily Key</span>
+                    </button>
+                    <button id="hwr_clear_tavily_key" class="menu_button" type="button">
+                        <i class="fa-solid fa-key"></i>
+                        <span>删除当前共享 Key</span>
+                    </button>
+                    <button id="hwr_test_tavily" class="menu_button" type="button">
+                        <i class="fa-solid fa-magnifying-glass"></i>
+                        <span>测试 Tavily（会消耗一次搜索）</span>
+                    </button>
+                </div>
+            </div>
+
+            <div id="hwr_serper_settings" class="hwr_backend_box">
+                <h4>Serper Google Search</h4>
+                <div class="hwr_notice">
+                    复用原版 SillyTavern 的 Serper 搜索路由与当前用户的共享密钥槽。这里保存或删除 Key 也会影响酒馆 WebSearch 等其他使用者；每条规划查询只请求一页，并只采用带有效 HTTP(S) URL 的结果。
+                </div>
+                <label for="hwr_serper_key">Serper Key</label>
+                <input id="hwr_serper_key" class="text_pole" type="password" autocomplete="new-password" spellcheck="false">
+                <div id="hwr_serper_status" class="hwr_credential_status" role="status" aria-live="polite"></div>
+                <div class="hwr_button_row">
+                    <button id="hwr_save_serper_key" class="menu_button" type="button">
+                        <i class="fa-solid fa-floppy-disk"></i>
+                        <span>保存共享 Serper Key</span>
+                    </button>
+                    <button id="hwr_clear_serper_key" class="menu_button" type="button">
+                        <i class="fa-solid fa-key"></i>
+                        <span>删除当前共享 Key</span>
+                    </button>
+                    <button id="hwr_test_serper" class="menu_button" type="button">
+                        <i class="fa-solid fa-magnifying-glass"></i>
+                        <span>测试 Serper（会消耗一次搜索）</span>
+                    </button>
+                </div>
+            </div>
+
+            <div id="hwr_deepseek_settings" class="hwr_backend_box">
+                <h4>DeepSeek Search</h4>
+                <div class="hwr_notice">
+                    由浏览器直接调用 DeepSeek 官方搜索 API（<code>api.deepseek.com/v1/tools/search</code>），不经过酒馆服务端路由。Key 以明文保存在本扩展设置（<code>settings.json</code>）中，能读取这个酒馆用户设置的人都能看到；多人或公网酒馆请勿使用。每条规划查询请求一次，按 DeepSeek 计费，查询词超过 128 字会被截断。
+                </div>
+                <label for="hwr_deepseek_key">DeepSeek API Key</label>
+                <input id="hwr_deepseek_key" class="text_pole" type="password" autocomplete="new-password" spellcheck="false">
+                <div id="hwr_deepseek_status" class="hwr_credential_status" role="status" aria-live="polite"></div>
+                <div class="hwr_button_row">
+                    <button id="hwr_save_deepseek_key" class="menu_button" type="button">
+                        <i class="fa-solid fa-floppy-disk"></i>
+                        <span>保存 DeepSeek Key</span>
+                    </button>
+                    <button id="hwr_clear_deepseek_key" class="menu_button" type="button">
+                        <i class="fa-solid fa-key"></i>
+                        <span>删除 Key</span>
+                    </button>
+                    <button id="hwr_test_deepseek" class="menu_button" type="button">
+                        <i class="fa-solid fa-magnifying-glass"></i>
+                        <span>测试 DeepSeek（会消耗一次搜索）</span>
+                    </button>
+                </div>
+            </div>
+
+            <div id="hwr_koboldcpp_settings" class="hwr_backend_box">
+                <h4>KoboldCpp WebSearch</h4>
+                <div class="hwr_notice">
+                    不另存 URL 或 Key，直接继承 SillyTavern 当前 Text Completion → KoboldCpp 的服务器 URL。需要 KoboldCpp 1.81.1 或更新版本，并以 <code>--websearch</code> 启动；网页检索由该 KoboldCpp 实例完成，主模型仍按当前酒馆连接回答。
+                </div>
+                <button id="hwr_test_koboldcpp" class="menu_button hwr_button" type="button">
+                    <i class="fa-solid fa-magnifying-glass"></i>
+                    <span>测试 KoboldCpp WebSearch（不调用模型）</span>
+                </button>
+            </div>
+
+            <div id="hwr_extras_settings" class="hwr_backend_box">
+                <h4>Extras API（已废弃）</h4>
+                <div class="hwr_notice hwr_warning">
+                    SillyTavern Extras 已停止维护；这里只保留与既有安装的兼容。必须先在酒馆配置可用的 Extras API，并启用其 <code>websearch</code> 模块。新安装建议优先使用 SearXNG、Tavily、Serper 或其他受支持来源。
+                </div>
+                <label for="hwr_extras_engine">搜索引擎</label>
+                <select id="hwr_extras_engine" class="text_pole">
+                    <option value="google">Google</option>
+                    <option value="duckduckgo">DuckDuckGo</option>
+                </select>
+                <div class="hwr_notice hwr_warning">
+                    Extras 返回聚合正文与候选链接，无法可靠证明每一条事实对应哪一个 URL。选择此来源时，P1G搜强制使用中性聚合研究包，不构造隐藏工具结果；候选链接只供模型核对方向，模型不得伪造逐条引用或宣称它们分别支持某项事实。
+                </div>
+                <button id="hwr_test_extras" class="menu_button hwr_button" type="button">
+                    <i class="fa-solid fa-magnifying-glass"></i>
+                    <span>测试 Extras API（会执行一次搜索）</span>
+                </button>
+            </div>
+
+            <div id="hwr_selenium_settings" class="hwr_backend_box">
+                <h4>Selenium Plugin</h4>
+                <div class="hwr_notice hwr_warning">
+                    此来源不是纯前端能力：必须在 SillyTavern 服务器安装并启用 WebSearch Selenium server plugin。其他搜索来源不依赖该插件，也不需要修改酒馆核心文件。
+                </div>
+                <label for="hwr_selenium_engine">搜索引擎</label>
+                <select id="hwr_selenium_engine" class="text_pole">
+                    <option value="google">Google</option>
+                    <option value="duckduckgo">DuckDuckGo</option>
+                </select>
+                <div class="hwr_notice hwr_warning">
+                    Selenium Plugin 返回聚合正文与候选链接，无法可靠证明每一条事实对应哪一个 URL。选择此来源时，P1G搜强制使用中性聚合研究包，不构造隐藏工具结果；候选链接只供模型核对方向，模型不得伪造逐条引用或宣称它们分别支持某项事实。
+                </div>
+                <button id="hwr_test_selenium" class="menu_button hwr_button" type="button">
+                    <i class="fa-solid fa-magnifying-glass"></i>
+                    <span>测试 Selenium Plugin（会执行一次搜索）</span>
+                </button>
+            </div>
+
+            <!-- Paused server-dependent UI: native Claude/Gemini modes are kept for future work.
+            <div id="hwr_claude_profile_settings" class="hwr_backend_box">
+                <h4>Claude 原生搜索桥接</h4>
+                <div class="hwr_notice hwr_warning">
+                    该模式由一个独立 Claude 连接（Connection Profile 或下方直连）执行 Anthropic web_search，再把研究结果临时交给当前主模型。来源支持时使用官方最新 <code>web_search_20260318</code>，并强制 <code>direct</code> 模式，以便稳定提取结构化搜索结果；不支持该协议的中转无法由扩展补齐。只有通过本地门控时才产生 Claude token 与搜索费用。
+                </div>
+                <label for="hwr_claude_connection_mode">连接方式</label>
+                <select id="hwr_claude_connection_mode" class="text_pole">
+                    <option value="profile">使用已有 Connection Profile</option>
+                    <option value="direct">使用下方 URL + Key 直连</option>
+                </select>
+                <div id="hwr_claude_profile_connection" class="hwr_connection_panel">
+                    <label for="hwr_claude_profile">Claude Connection Profile</label>
+                    <div class="hwr_inline">
+                        <select id="hwr_claude_profile" class="text_pole"></select>
+                        <button id="hwr_refresh_profiles" class="menu_button" type="button" title="刷新 Profile">
+                            <i class="fa-solid fa-rotate"></i>
+                        </button>
+                    </div>
+                    <div id="hwr_claude_profile_hint" class="hwr_hint"></div>
+                </div>
+                <div id="hwr_claude_direct_connection" class="hwr_connection_panel hwr_direct_panel">
+                    <div class="hwr_hint">
+                        URL 与 Key 会绑定成一个凭据包保存到 SillyTavern 服务端 secrets；扩展设置只保存 URL 与模型名。实际请求不能临时改发到其他地址。
+                    </div>
+                    <label for="hwr_claude_direct_url">Claude Messages API Base URL</label>
+                    <input
+                        id="hwr_claude_direct_url"
+                        class="text_pole"
+                        type="url"
+                        autocomplete="off"
+                        spellcheck="false"
+                        placeholder="https://api.anthropic.com/v1"
+                    >
+                    <div class="hwr_hint">填写到 API 根路径；若粘贴了末尾 <code>/messages</code>，保存时会自动去除。中转必须兼容 Anthropic Messages 和原生 web_search 内容块。</div>
+                    <label for="hwr_claude_direct_model">精确模型 ID</label>
+                    <div class="hwr_model_row">
+                        <input id="hwr_claude_direct_model" class="text_pole" type="text" list="hwr_claude_direct_models" autocomplete="off" spellcheck="false" placeholder="例如 claude-opus-5">
+                        <button id="hwr_fetch_claude_models" class="menu_button" type="button" aria-describedby="hwr_claude_model_list_status" aria-busy="false">
+                            <i class="fa-solid fa-list"></i>
+                            <span>拉取模型列表</span>
+                        </button>
+                    </div>
+                    <datalist id="hwr_claude_direct_models"></datalist>
+                    <div id="hwr_claude_model_list_status" class="hwr_model_list_status" data-state="idle" role="status" aria-live="polite">
+                        尚未拉取模型列表；也可以始终手工填写精确模型 ID。
+                    </div>
+                    <label for="hwr_claude_direct_key">API Key</label>
+                    <input id="hwr_claude_direct_key" class="text_pole" type="password" autocomplete="new-password" spellcheck="false">
+                    <div id="hwr_claude_direct_status" class="hwr_credential_status" role="status" aria-live="polite"></div>
+                    <div class="hwr_button_row">
+                        <button id="hwr_save_claude_direct" class="menu_button" type="button">
+                            <i class="fa-solid fa-floppy-disk"></i>
+                            <span>保存 URL / 模型 / Key</span>
+                        </button>
+                        <button id="hwr_clear_claude_direct" class="menu_button" type="button">
+                            <i class="fa-solid fa-key"></i>
+                            <span>清除直连配置</span>
+                        </button>
+                    </div>
+                </div>
+                <label for="hwr_claude_tokens">研究输出上限（tokens，建议 800–1200）</label>
+                <input id="hwr_claude_tokens" class="text_pole" type="number" min="512" max="8192" step="128">
+                <button id="hwr_test_claude" class="menu_button hwr_button" type="button">
+                    <i class="fa-solid fa-flask"></i>
+                    <span>测试 Claude 搜索（会计费）</span>
+                </button>
+            </div>
+
+            <div id="hwr_gemini_profile_settings" class="hwr_backend_box">
+                <h4>Gemini 原生搜索直答</h4>
+                <div class="hwr_notice hwr_warning">
+                    通过本地门控后，由所选 Gemini Profile 或下方直连执行 Google Search，并把 Gemini 的完整 grounded answer 直接作为本轮唯一助手回复；当前主模型本轮不会调用。官方引用和 Google Search Suggestions 会同屏显示，且不会进入隐藏研究缓存。受 Google 展示与使用条款约束，Grounded Result 不能先隐藏，再交给 Claude、DeepSeek 或其他模型转写。
+                </div>
+                <label for="hwr_gemini_connection_mode">连接方式</label>
+                <select id="hwr_gemini_connection_mode" class="text_pole">
+                    <option value="profile">使用已有 Connection Profile</option>
+                    <option value="direct">使用下方 URL + Key 直连</option>
+                </select>
+                <div id="hwr_gemini_profile_connection" class="hwr_connection_panel">
+                    <label for="hwr_gemini_profile">Google AI Studio / Vertex AI Connection Profile</label>
+                    <div class="hwr_inline">
+                        <select id="hwr_gemini_profile" class="text_pole"></select>
+                        <button id="hwr_refresh_gemini_profiles" class="menu_button" type="button" title="刷新 Profile">
+                            <i class="fa-solid fa-rotate"></i>
+                        </button>
+                    </div>
+                    <div id="hwr_gemini_profile_hint" class="hwr_hint"></div>
+                </div>
+                <div id="hwr_gemini_direct_connection" class="hwr_connection_panel hwr_direct_panel">
+                    <div class="hwr_hint">
+                        直连只支持 Google AI Studio <code>generateContent</code> 协议；Vertex AI 请继续使用 Profile。URL 与 Key 会绑定保存到 SillyTavern 服务端 secrets。
+                    </div>
+                    <label for="hwr_gemini_direct_url">Gemini API 站点根地址</label>
+                    <input
+                        id="hwr_gemini_direct_url"
+                        class="text_pole"
+                        type="url"
+                        autocomplete="off"
+                        spellcheck="false"
+                        placeholder="https://generativelanguage.googleapis.com"
+                    >
+                    <div class="hwr_hint">不要填写 <code>/v1</code>、<code>/v1beta</code> 或 <code>/models/...</code>；末尾版本路径会在保存时自动去除。</div>
+                    <label for="hwr_gemini_direct_model">精确模型 ID</label>
+                    <div class="hwr_model_row">
+                        <input id="hwr_gemini_direct_model" class="text_pole" type="text" list="hwr_gemini_direct_models" autocomplete="off" spellcheck="false" placeholder="例如 gemini-3.1-pro-preview">
+                        <button id="hwr_fetch_gemini_models" class="menu_button" type="button" aria-describedby="hwr_gemini_model_list_status" aria-busy="false">
+                            <i class="fa-solid fa-list"></i>
+                            <span>拉取模型列表</span>
+                        </button>
+                    </div>
+                    <datalist id="hwr_gemini_direct_models"></datalist>
+                    <div id="hwr_gemini_model_list_status" class="hwr_model_list_status" data-state="idle" role="status" aria-live="polite">
+                        尚未拉取模型列表；也可以始终手工填写精确模型 ID。
+                    </div>
+                    <label for="hwr_gemini_direct_key">API Key</label>
+                    <input id="hwr_gemini_direct_key" class="text_pole" type="password" autocomplete="new-password" spellcheck="false">
+                    <div id="hwr_gemini_direct_status" class="hwr_credential_status" role="status" aria-live="polite"></div>
+                    <div class="hwr_button_row">
+                        <button id="hwr_save_gemini_direct" class="menu_button" type="button">
+                            <i class="fa-solid fa-floppy-disk"></i>
+                            <span>保存 URL / 模型 / Key</span>
+                        </button>
+                        <button id="hwr_clear_gemini_direct" class="menu_button" type="button">
+                            <i class="fa-solid fa-key"></i>
+                            <span>清除直连配置</span>
+                        </button>
+                    </div>
+                </div>
+                <label for="hwr_gemini_tokens">最终回答输出上限（tokens）</label>
+                <input id="hwr_gemini_tokens" class="text_pole" type="number" min="512" max="65536" step="512">
+                <div class="hwr_hint">
+                    推荐 Gemini 2.5 Flash-Lite + 1024–2048；Gemini 3 的隐藏思考可能需要 8192 或更高，并可能自动执行多条计费搜索查询。
+                </div>
+                <div class="hwr_notice">
+                    gcli 兼容配置：可在 Connection Manager 建立 Google AI Studio Profile，也可直接在上方保存站点根地址（例如 <code>https://gcli.ggchan.dev</code>，不要保留 <code>/v1</code>）与对应 Key；模型可选 <code>gemini-2.5-flash-lite</code>。不要选 OpenAI 包装的 <code>-search</code> 型号，否则拿不到结构化 Grounding 与 Search Suggestions。
+                </div>
+                <div class="hwr_hint">
+                    此模式不提供后台“测试搜索”：实际搜索结果必须展示给发起用户。可发送一条“请联网查……”消息进行验证。
+                </div>
+            </div>
+            -->
+
+            <label id="hwr_source_links_label" class="checkbox_label" for="hwr_include_source_links">
+                <input type="checkbox" id="hwr_include_source_links">
+                <span>对可逐条归因的结果保留真实 URL，并要求最终回答使用 Markdown 引用</span>
+            </label>
+
+            <details id="hwr_advanced_section" class="hwr_section hwr_advanced">
+                <summary><span class="hwr_summary_title">高级限制与调试</span><span id="hwr_advanced_summary" class="hwr_summary_meta"></span></summary>
+                <div class="hwr_grid">
+                    <label for="hwr_max_rounds">最多规划轮数</label>
+                    <input id="hwr_max_rounds" class="text_pole" type="number" min="1" max="5">
+
+                    <label for="hwr_queries_per_round">每轮最多查询</label>
+                    <input id="hwr_queries_per_round" class="text_pole" type="number" min="1" max="3">
+
+                    <label for="hwr_total_queries">总查询上限</label>
+                    <input id="hwr_total_queries" class="text_pole" type="number" min="1" max="10">
+
+                    <label for="hwr_results_per_query">每次结果数</label>
+                    <input id="hwr_results_per_query" class="text_pole" type="number" min="1" max="10">
+
+                    <label for="hwr_planner_tokens">规划器 tokens</label>
+                    <input id="hwr_planner_tokens" class="text_pole" type="number" min="128" max="2048" step="64">
+
+                    <label for="hwr_recent_messages">参考最近消息数</label>
+                    <input id="hwr_recent_messages" class="text_pole" type="number" min="1" max="20">
+
+                    <label for="hwr_recent_context_chars">最近对话字符上限</label>
+                    <input id="hwr_recent_context_chars" class="text_pole" type="number" min="2000" max="30000" step="1000">
+
+                    <label for="hwr_query_chars">每次证据字符上限</label>
+                    <input id="hwr_query_chars" class="text_pole" type="number" min="1000" max="12000" step="500">
+
+                    <label for="hwr_evidence_chars">总证据字符上限</label>
+                    <input id="hwr_evidence_chars" class="text_pole" type="number" min="2000" max="40000" step="1000">
+
+                    <label for="hwr_timeout_ms">单请求超时（ms）</label>
+                    <input id="hwr_timeout_ms" class="text_pole" type="number" min="5000" max="180000" step="1000">
+
+                    <label for="hwr_reuse_seconds">重生成复用时间（秒）</label>
+                    <input id="hwr_reuse_seconds" class="text_pole" type="number" min="0" max="3600" step="60">
+                </div>
+                <div class="hwr_hint">
+                    这里的轮数、查询数和证据长度是实际执行上限；缓存仅保存在当前页面内存中。
+                </div>
+                <div class="hwr_button_row">
+                    <button id="hwr_restore_advanced_defaults" class="menu_button" type="button">
+                        <i class="fa-solid fa-rotate-left"></i>
+                        <span>恢复高级限制默认值</span>
+                    </button>
+                    <button id="hwr_clear_cache" class="menu_button" type="button">
+                        <i class="fa-solid fa-broom"></i>
+                        <span>清理内存缓存</span>
+                    </button>
+                </div>
+                <label class="checkbox_label" for="hwr_debug">
+                    <input type="checkbox" id="hwr_debug">
+                    <span>本扩展调试日志（不会打印搜索正文）</span>
+                </label>
+            </details>
+
+            <details id="hwr_diagnostic_section" class="hwr_section">
+                <summary>
+                    <span class="hwr_summary_title">排查日志（自动收集）</span>
+                    <span id="hwr_diagnostic_summary" class="hwr_summary_meta" aria-live="polite">0 条事件</span>
+                </summary>
+                <div class="hwr_section_body">
+                    <div class="hwr_notice">
+                        遇到问题后，直接导出文件发给作者，无需开启调试或 F12。自动记录版本、模型、相关设置、每轮规划、查询拦截原因、搜索耗时和结果数量。
+                    </div>
+                    <div class="hwr_hint" id="hwr_diagnostic_privacy">
+                        仅保存在本页内存，最多 240 条事件、200,000 字符。刷新、切换聊天或清空后删除；清空时正在运行的旧请求不会补回记录。不记录聊天原文、搜索词、网页正文、规划器完整回复、原始错误、URL 或密钥；自定义提示词仅记录开关和长度。
+                    </div>
+                    <div class="hwr_button_row">
+                        <button id="hwr_export_diagnostics" class="menu_button" type="button">
+                            <i class="fa-solid fa-download"></i><span>导出排查日志</span>
+                        </button>
+                        <button id="hwr_copy_diagnostics" class="menu_button" type="button">
+                            <i class="fa-solid fa-copy"></i><span>复制排查日志</span>
+                        </button>
+                        <button id="hwr_clear_diagnostics" class="menu_button" type="button">
+                            <i class="fa-solid fa-trash-can"></i><span>清空排查日志</span>
+                        </button>
+                    </div>
+                    <textarea id="hwr_diagnostic_preview" class="text_pole" rows="10" readonly hidden aria-label="排查日志文本，可手动复制" aria-describedby="hwr_diagnostic_privacy" spellcheck="false"></textarea>
+                </div>
+            </details>
+
+            <details id="hwr_search_log_section" class="hwr_section hwr_search_log">
+                <summary>
+                    <span class="hwr_summary_title">本页搜索日志</span>
+                    <span id="hwr_search_log_summary" class="hwr_summary_meta" aria-live="polite">暂无记录</span>
+                </summary>
+                <div class="hwr_section_body">
+                    <div id="hwr_search_log_privacy" class="hwr_notice">
+                        仅保存在当前页签内存，最多保留最近 40 次、合计 200,000 字符；切换聊天、刷新页面或手动清空后删除。只显示实际发送的关键词，以及搜索来源返回并通过规范化的结果；部分结果可能因去重或证据预算未进入最终提示。不保存原始响应、请求头或 Key。
+                    </div>
+                    <div class="hwr_button_row">
+                        <button id="hwr_copy_search_log" class="menu_button" type="button" disabled>
+                            <i class="fa-solid fa-copy"></i>
+                            <span>复制全部</span>
+                        </button>
+                        <button id="hwr_clear_search_log" class="menu_button" type="button" disabled>
+                            <i class="fa-solid fa-trash-can"></i>
+                            <span>清空日志</span>
+                        </button>
+                    </div>
+                    <div id="hwr_search_log_empty" class="hwr_hint">暂无实际搜索记录。</div>
+                    <div id="hwr_search_log_entries" class="hwr_search_log_entries" role="region" aria-label="搜索日志列表" aria-describedby="hwr_search_log_privacy"></div>
+                </div>
+            </details>
+
+
+            <details id="hwr_help_section" class="hwr_section hwr_help">
+                <summary><span class="hwr_summary_title">兼容性、隐私与技术说明</span><span class="hwr_summary_meta">版本与数据边界</span></summary>
+                <div class="hwr_section_body hwr_privacy">
+                    <p>兼容 SillyTavern 1.13.3 及以上版本（已验证 1.13.3–1.18.x）。直填多组副 API Key 需要 1.18.0+；旧版请使用 Connection Profile。</p>
+                    <p>搜索资料只临时进入本轮模型请求，不写入聊天、附件、Data Bank、LocalStorage 或 IndexedDB；搜索词及必要上下文会发送给你选择的搜索服务和规划 API。</p>
+                    <p>SerpAPI、Tavily、Serper 与直连规划 Key 存在 SillyTavern 服务端 secrets 中。插件调试日志不打印搜索正文，但原版酒馆、外部来源或可选组件可能按各自策略记录请求。</p>
+                    <p>自动注入会优先使用隐藏工具历史；协议不兼容时改用中性隐藏研究包。Extras 与 Selenium 只能提供未逐条归因的聚合资料，因此始终使用研究包。</p>
+                </div>
+            </details>
+                </div>
+            </details>
+        </div>
+    </div>
+</div>
+
